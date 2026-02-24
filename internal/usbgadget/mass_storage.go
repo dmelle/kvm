@@ -24,3 +24,15 @@ var massStorageLun0Config = gadgetConfigItem{
 		"inquiry_string": "JetKVM  Virtual Media",
 	},
 }
+
+var massStorageLun1Config = gadgetConfigItem{
+	order: 3002,
+	path:  []string{"functions", "mass_storage.usb0", "lun.1"},
+	attrs: gadgetAttributes{
+		"cdrom":          "0",
+		"ro":             "0",
+		"removable":      "1",
+		"file":           "\n",
+		"inquiry_string": "JetKVM  File Transfer",
+	},
+}

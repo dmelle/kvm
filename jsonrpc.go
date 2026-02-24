@@ -1209,4 +1209,13 @@ var rpcHandlers = map[string]RPCHandler{
 	"setLocalLoopbackOnly":   {Func: rpcSetLocalLoopbackOnly, Params: []string{"enabled"}},
 	"getPublicIPAddresses":   {Func: rpcGetPublicIPAddresses, Params: []string{"refresh"}},
 	"checkPublicIPAddresses": {Func: rpcCheckPublicIPAddresses},
+
+	// File transfer
+	"fileTransferCreateDrive":          {Func: rpcFileTransferCreateDrive, Params: []string{"sizeMB"}},
+	"fileTransferDeleteDrive":          {Func: rpcFileTransferDeleteDrive},
+	"fileTransferGetState":             {Func: rpcFileTransferGetState},
+	"fileTransferConnectToTarget":      {Func: rpcFileTransferConnectToTarget},
+	"fileTransferDisconnectFromTarget": {Func: rpcFileTransferDisconnectFromTarget},
+	"fileTransferListFiles":            {Func: rpcFileTransferListFiles},
+	"fileTransferDeleteFile":           {Func: rpcFileTransferDeleteFile, Params: []string{"filename"}},
 }

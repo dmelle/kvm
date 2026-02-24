@@ -39,7 +39,7 @@ const appendStatToMap = <T extends { timestamp: number }>(
 };
 
 // Constants and types
-export type AvailableSidebarViews = "connection-stats";
+export type AvailableSidebarViews = "connection-stats" | "file-transfer";
 export type AvailableTerminalTypes = "kvm" | "serial" | "none";
 
 export interface User {
@@ -75,6 +75,9 @@ export interface UIState {
   setRebootState: (
     state: { isRebooting: boolean; postRebootAction: PostRebootAction } | null,
   ) => void;
+
+  isOCRSelecting: boolean;
+  setOCRSelecting: (enabled: boolean) => void;
 }
 
 export const useUiStore = create<UIState>(set => ({
@@ -105,6 +108,9 @@ export const useUiStore = create<UIState>(set => ({
 
   rebootState: null,
   setRebootState: state => set({ rebootState: state }),
+
+  isOCRSelecting: false,
+  setOCRSelecting: (enabled: boolean) => set({ isOCRSelecting: enabled }),
 }));
 
 export interface RTCState {

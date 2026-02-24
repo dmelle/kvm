@@ -110,6 +110,8 @@ func Main() {
 		logger.Warn().Err(err).Msg("failed to set initial virtual media state")
 	}
 
+	initFileTransferState()
+
 	if err := initImagesFolder(); err != nil {
 		logger.Warn().Err(err).Msg("failed to init images folder")
 	}

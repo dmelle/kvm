@@ -41,6 +41,7 @@ import { useVersion } from "@hooks/useVersion";
 import WebRTCVideo from "@components/WebRTCVideo";
 import DashboardNavbar from "@components/Header";
 const ConnectionStatsSidebar = lazy(() => import("@components/sidebar/connectionStats"));
+const FileTransferSidebar = lazy(() => import("@components/sidebar/FileTransfer"));
 const Terminal = lazy(() => import("@components/Terminal"));
 const UpdateInProgressStatusCard = lazy(() => import("@components/UpdateInProgressStatusCard"));
 import Modal from "@components/Modal";
@@ -1050,6 +1051,20 @@ function SidebarContainer(props: SidebarContainerProps) {
               }}
             >
               <ConnectionStatsSidebar />
+            </motion.div>
+          )}
+          {sidebarView === "file-transfer" && (
+            <motion.div
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 0.5,
+                ease: "easeInOut",
+              }}
+            >
+              <FileTransferSidebar />
             </motion.div>
           )}
         </AnimatePresence>

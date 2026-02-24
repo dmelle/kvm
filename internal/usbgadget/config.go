@@ -59,6 +59,7 @@ var defaultGadgetConfig = map[string]gadgetConfigItem{
 	// mass storage
 	"mass_storage_base": massStorageBaseConfig,
 	"mass_storage_lun0": massStorageLun0Config,
+	"mass_storage_lun1": massStorageLun1Config,
 }
 
 func (u *UsbGadget) isGadgetConfigItemEnabled(itemKey string) bool {
@@ -72,6 +73,8 @@ func (u *UsbGadget) isGadgetConfigItemEnabled(itemKey string) bool {
 	case "mass_storage_base":
 		return u.enabledDevices.MassStorage
 	case "mass_storage_lun0":
+		return u.enabledDevices.MassStorage
+	case "mass_storage_lun1":
 		return u.enabledDevices.MassStorage
 	default:
 		return true

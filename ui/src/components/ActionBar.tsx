@@ -1,12 +1,25 @@
 import { Fragment, useCallback, useRef } from "react";
 import { MdOutlineContentPasteGo } from "react-icons/md";
-import { LuCable, LuHardDrive, LuMaximize, LuSettings, LuSignal } from "react-icons/lu";
+import {
+  LuCable,
+  LuFolderSync,
+  LuHardDrive,
+  LuMaximize,
+  LuScanText,
+  LuSettings,
+  LuSignal,
+} from "react-icons/lu";
 import { FaKeyboard } from "react-icons/fa6";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { CommandLineIcon } from "@heroicons/react/20/solid";
 
 import { cx } from "@/cva.config";
-import { useHidStore, useMountMediaStore, useSettingsStore, useUiStore } from "@hooks/stores";
+import {
+  useHidStore,
+  useMountMediaStore,
+  useSettingsStore,
+  useUiStore,
+} from "@hooks/stores";
 import { useDeviceUiNavigation } from "@hooks/useAppNavigation";
 import { Button } from "@components/Button";
 import Container from "@components/Container";
@@ -23,8 +36,13 @@ export default function Actionbar({
 }) {
   const { navigateTo } = useDeviceUiNavigation();
   const { isVirtualKeyboardEnabled, setVirtualKeyboardEnabled } = useHidStore();
-  const { setDisableVideoFocusTrap, terminalType, setTerminalType, toggleSidebarView } =
-    useUiStore();
+  const {
+    setDisableVideoFocusTrap,
+    terminalType,
+    setTerminalType,
+    toggleSidebarView,
+    setOCRSelecting,
+  } = useUiStore();
   const { remoteVirtualMediaState } = useMountMediaStore();
   const { developerMode } = useSettingsStore();
 
@@ -93,6 +111,16 @@ export default function Actionbar({
               }}
             </PopoverPanel>
           </Popover>
+          <Button
+            size="XS"
+            theme="light"
+            text="Copy Text"
+            LeadingIcon={LuScanText}
+            onClick={() => {
+              setDisableVideoFocusTrap(true);
+              setOCRSelecting(true);
+            }}
+          />
           <div className="relative">
             <Popover>
               <PopoverButton as={Fragment}>
@@ -136,6 +164,13 @@ export default function Actionbar({
               </PopoverPanel>
             </Popover>
           </div>
+          <Button
+            size="XS"
+            theme="light"
+            text="File Transfer"
+            LeadingIcon={LuFolderSync}
+            onClick={() => toggleSidebarView("file-transfer")}
+          />
           <div>
             <Popover>
               <PopoverButton as={Fragment}>
