@@ -5,7 +5,7 @@ import { cx } from "@/cva.config";
 import { isWindows } from "@/utils";
 import useKeyboard from "@hooks/useKeyboard";
 import useMouse from "@hooks/useMouse";
-import { useRTCStore, useSettingsStore, useVideoStore } from "@hooks/stores";
+import { useRTCStore, useSettingsStore, useUiStore, useVideoStore } from "@hooks/stores";
 import VirtualKeyboard from "@components/VirtualKeyboard";
 import Actionbar from "@components/ActionBar";
 import MacroBar from "@components/MacroBar";
@@ -16,6 +16,8 @@ import {
   NoAutoplayPermissionsOverlay,
   PointerLockBar,
 } from "@components/VideoOverlay";
+import RegionSelector, { SelectedRegion } from "@components/RegionSelector";
+import { useOCR } from "@hooks/useOCR";
 import { keys } from "@/keyboardMappings";
 import notifications from "@/notifications";
 import { m } from "@localizations/messages.js";
@@ -51,6 +53,32 @@ export default function WebRTCVideo({ hasConnectionIssues }: { hasConnectionIssu
     hdmiState,
     setVideoElement,
   } = useVideoStore();
+
+  // OCR selection mode
+  const { isOCRSelecting, setOCRSelecting, setDisableVideoFocusTrap } = useUiStore();
+  const { recognizeRegion } = useOCR();
+
+  const handleOCRRegion = useCallback(
+    async (rect: SelectedRegion) => {
+      setOCRSelecting(false);
+      setDisableVideoFocusTrap(false);
+
+      if (!videoElm.current) return;
+
+      try {
+        await recognizeRegion(videoElm.current, rect);
+      } catch (err) {
+        console.error("OCR failed:", err);
+        notifications.error("OCR failed. Please try again.");
+      }
+    },
+    [recognizeRegion, setOCRSelecting, setDisableVideoFocusTrap],
+  );
+
+  const handleOCRCancel = useCallback(() => {
+    setOCRSelecting(false);
+    setDisableVideoFocusTrap(false);
+  }, [setOCRSelecting, setDisableVideoFocusTrap]);
 
   // Video enhancement settings
   const { videoSaturation, videoBrightness, videoContrast } = useSettingsStore();
@@ -649,6 +677,12 @@ export default function WebRTCVideo({ hasConnectionIssues }: { hasConnectionIssu
                             />
                           </div>
                         </div>
+                      )}
+                      {isOCRSelecting && (
+                        <RegionSelector
+                          onRegionSelected={handleOCRRegion}
+                          onCancel={handleOCRCancel}
+                        />
                       )}
                     </div>
                   </div>
