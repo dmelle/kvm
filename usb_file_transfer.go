@@ -67,9 +67,35 @@ func loopMountTransferImage() error {
 	if err := os.MkdirAll(transferMountPath, 0755); err != nil {
 		return fmt.Errorf("failed to create mount point: %w", err)
 	}
-	out, err := exec.Command("mount", "-o", "loop", transferImagePath, transferMountPath).CombinedOutput()
+
+	// BusyBox mount doesn't support -o loop, so use losetup manually
+	out, err := exec.Command("losetup", "-f", transferImagePath).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to loop mount: %w, output: %s", err, string(out))
+		return fmt.Errorf("failed to setup loop device: %w, output: %s", err, string(out))
+	}
+
+	// Find which loop device was assigned
+	out, err = exec.Command("losetup", "-a").CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to list loop devices: %w, output: %s", err, string(out))
+	}
+
+	var loopDev string
+	for _, line := range strings.Split(string(out), "\n") {
+		if strings.Contains(line, transferImagePath) {
+			loopDev = strings.SplitN(line, ":", 2)[0]
+			break
+		}
+	}
+	if loopDev == "" {
+		return fmt.Errorf("failed to find loop device for %s", transferImagePath)
+	}
+
+	out, err = exec.Command("mount", loopDev, transferMountPath).CombinedOutput()
+	if err != nil {
+		// Clean up loop device on mount failure
+		_ = exec.Command("losetup", "-d", loopDev).Run()
+		return fmt.Errorf("failed to mount loop device: %w, output: %s", err, string(out))
 	}
 	return nil
 }
@@ -78,6 +104,17 @@ func unmountTransferImage() error {
 	out, err := exec.Command("umount", transferMountPath).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to unmount: %w, output: %s", err, string(out))
+	}
+
+	// Detach any loop devices associated with our image
+	loOut, err := exec.Command("losetup", "-a").CombinedOutput()
+	if err == nil {
+		for _, line := range strings.Split(string(loOut), "\n") {
+			if strings.Contains(line, transferImagePath) {
+				loopDev := strings.SplitN(line, ":", 2)[0]
+				_ = exec.Command("losetup", "-d", loopDev).Run()
+			}
+		}
 	}
 	return nil
 }

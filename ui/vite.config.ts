@@ -70,6 +70,7 @@ export default defineConfig(({ mode, command }) => {
           "/storage": JETKVM_PROXY_URL,
           "/cloud": JETKVM_PROXY_URL,
           "/developer": JETKVM_PROXY_URL,
+          "/file-transfer": JETKVM_PROXY_URL,
         }
         : undefined,
     },
