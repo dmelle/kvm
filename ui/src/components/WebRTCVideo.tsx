@@ -682,6 +682,7 @@ export default function WebRTCVideo({ hasConnectionIssues }: { hasConnectionIssu
                         <RegionSelector
                           onRegionSelected={handleOCRRegion}
                           onCancel={handleOCRCancel}
+                          videoRef={videoElm}
                         />
                       )}
                     </div>

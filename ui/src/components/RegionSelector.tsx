@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useVideoStore } from "@hooks/stores";
-
 export interface SelectedRegion {
   x: number;
   y: number;
@@ -12,6 +10,7 @@ export interface SelectedRegion {
 interface RegionSelectorProps {
   onRegionSelected: (rect: SelectedRegion) => void;
   onCancel: () => void;
+  videoRef?: React.RefObject<HTMLVideoElement | null>;
 }
 
 interface DragState {
@@ -84,16 +83,9 @@ function screenToVideoCoord(
   };
 }
 
-export default function RegionSelector({ onRegionSelected, onCancel }: RegionSelectorProps) {
+export default function RegionSelector({ onRegionSelected, onCancel, videoRef }: RegionSelectorProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
-
-  const {
-    width: videoWidth,
-    height: videoHeight,
-    clientWidth: videoClientWidth,
-    clientHeight: videoClientHeight,
-  } = useVideoStore();
 
   // Cancel on Escape
   useEffect(() => {
@@ -141,26 +133,33 @@ export default function RegionSelector({ onRegionSelected, onCancel }: RegionSel
       if (!drag || e.button !== 0) return;
       e.preventDefault();
 
-      const pos = getOverlayOffset(e);
-      const finalDrag = { ...drag, currentX: pos.x, currentY: pos.y };
+      const videoEl = videoRef?.current;
+      const overlayEl = overlayRef.current;
+      if (!videoEl || !overlayEl) {
+        setDrag(null);
+        return;
+      }
 
-      // Convert screen coordinates to video native coordinates
-      const start = screenToVideoCoord(
-        finalDrag.startX,
-        finalDrag.startY,
-        videoClientWidth,
-        videoClientHeight,
-        videoWidth,
-        videoHeight,
-      );
-      const end = screenToVideoCoord(
-        finalDrag.currentX,
-        finalDrag.currentY,
-        videoClientWidth,
-        videoClientHeight,
-        videoWidth,
-        videoHeight,
-      );
+      // Read fresh dimensions directly from the video element
+      const videoRect = videoEl.getBoundingClientRect();
+      const overlayRect = overlayEl.getBoundingClientRect();
+      const cw = videoEl.clientWidth;
+      const ch = videoEl.clientHeight;
+      const vw = videoEl.videoWidth;
+      const vh = videoEl.videoHeight;
+
+      // Convert overlay-relative drag coords to video-content-box-relative coords.
+      // drag.startX/Y are relative to the overlay's top-left.
+      // We convert to viewport coords, then to video content box coords.
+      // clientLeft/clientTop account for the video element's border.
+      const startVidX = drag.startX + overlayRect.left - videoRect.left - videoEl.clientLeft;
+      const startVidY = drag.startY + overlayRect.top - videoRect.top - videoEl.clientTop;
+      const endVidX = e.clientX - videoRect.left - videoEl.clientLeft;
+      const endVidY = e.clientY - videoRect.top - videoEl.clientTop;
+
+      // Convert to native video coordinates (handles object-contain offsets)
+      const start = screenToVideoCoord(startVidX, startVidY, cw, ch, vw, vh);
+      const end = screenToVideoCoord(endVidX, endVidY, cw, ch, vw, vh);
 
       // Normalize to top-left origin
       const x = Math.min(start.x, end.x);
@@ -174,10 +173,19 @@ export default function RegionSelector({ onRegionSelected, onCancel }: RegionSel
         return;
       }
 
+      console.debug("[OCR Region]", {
+        overlaySize: { w: overlayRect.width, h: overlayRect.height },
+        videoPos: { left: videoRect.left - overlayRect.left, top: videoRect.top - overlayRect.top },
+        videoSize: { rect: `${videoRect.width}x${videoRect.height}`, client: `${cw}x${ch}`, native: `${vw}x${vh}` },
+        border: { left: videoEl.clientLeft, top: videoEl.clientTop },
+        dragInVideo: { startVidX, startVidY, endVidX, endVidY },
+        nativeResult: { x, y, width, height },
+      });
+
       setDrag(null);
       onRegionSelected({ x, y, width, height });
     },
-    [drag, getOverlayOffset, videoClientWidth, videoClientHeight, videoWidth, videoHeight, onRegionSelected],
+    [drag, videoRef, onRegionSelected],
   );
 
   // Compute the visual selection rectangle in screen-space
